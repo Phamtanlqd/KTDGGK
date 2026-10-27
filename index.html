@@ -43,10 +43,13 @@ button:disabled{opacity:.5;cursor:default}
   <h1 id="ti">Kiểm tra trực tuyến</h1>
   <div class="card">
     <div class="mu" id="info">Đang tải cấu hình…</div>
-    <label for="hoTen">Họ và tên</label><input id="hoTen" autocomplete="name">
-    <label for="lop">Lớp</label><input id="lop" placeholder="Ví dụ: 12A1">
+    <div id="nameW">
+      <label for="hoTen">Họ và tên</label><input id="hoTen" autocomplete="name">
+      <label for="lop">Lớp</label><input id="lop" placeholder="Ví dụ: 12A1">
+    </div>
     <label for="maHS">Mã học sinh / SBD</label><input id="maHS" autocomplete="off">
-    <label for="maDe">Mã đề</label><select id="maDe"><option value="">Hệ thống tự chọn</option></select>
+    <div id="pinW" class="hide"><label for="pin">Mã PIN (do giáo viên cấp)</label><input id="pin" type="password" autocomplete="off" inputmode="numeric"></div>
+    <div id="deW"><label for="maDe">Mã đề</label><select id="maDe"><option value="">Hệ thống tự chọn</option></select></div>
     <div id="e1" class="err"></div>
     <p><button class="p" id="go">Bắt đầu làm bài</button></p>
     <div class="mu">Nếu bị mất kết nối hoặc tải lại trang, nhập lại đúng Mã học sinh để làm tiếp; thời gian vẫn tính theo máy chủ.</div>
@@ -92,10 +95,13 @@ call('layCauHinh').then(c=>{
   $('ti').textContent=c.tieuDe;document.title=c.tieuDe;
   $('info').textContent='Thời gian làm bài: '+c.thoiLuong+' phút · Tối đa '+c.soCau+' câu · Mỗi học sinh chỉ làm 1 lần.';
   c.dsMaDe.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent='Đề '+m;$('maDe').appendChild(o)});
+  $('deW').classList.toggle('hide',!c.choChonMaDe);      // giáo viên tắt chọn mã đề: hệ thống tự phân
+  $('nameW').classList.toggle('hide',!!c.dungDS);        // có danh sách dự thi: họ tên/lớp lấy từ danh sách
+  $('pinW').classList.toggle('hide',!c.canPin);
 }).catch(()=>{$('info').textContent='Không tải được cấu hình. Hãy tải lại trang.'});
 
 $('go').onclick=()=>{
-  const p={hoTen:$('hoTen').value,lop:$('lop').value,maHS:$('maHS').value,maDe:$('maDe').value};
+  const p={hoTen:$('hoTen').value,lop:$('lop').value,maHS:$('maHS').value,maDe:$('maDe').value,pin:$('pin').value};
   $('e1').textContent='';$('go').disabled=true;$('go').textContent='Đang vào…';
   call('batDau',p).then(r=>{
     $('go').disabled=false;$('go').textContent='Bắt đầu làm bài';
