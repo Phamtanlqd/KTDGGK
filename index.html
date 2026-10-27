@@ -86,7 +86,15 @@ button:disabled{opacity:.5;cursor:default}
 
 <script>
 const $=id=>document.getElementById(id);
-const call=(fn,...a)=>new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn](...a));
+/* Dán đường dẫn Web App (kết thúc bằng /exec) khi đặt trang này ngoài Apps Script, ví dụ trên GitHub Pages */
+const API_URL='https://script.google.com/macros/s/AKfycbzEhbELJO7ojTGuXFFTrdH9r8Gs7rvYB6zIYKewh6m7B7mDkEXkqu7gfdAhG0lRxCq1/exec';
+const inGAS=typeof google!=='undefined'&&google.script&&google.script.run;
+const call=(fn,...a)=>inGAS
+  ?new Promise((ok,no)=>google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn](...a))
+  :(!API_URL?Promise.reject(new Error('Chưa điền API_URL trong index.html'))
+   :fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:a})})
+      .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+      .then(j=>{if(j.__err)throw new Error(j.__err);return j.r}));
 const show=n=>{['s1','s2','s3'].forEach(k=>$(k).classList.toggle('hide',k!=='s'+n))};
 let S=null,cur=0,flag={},endAt=0,roi=0,sending=false,saveT=null,warned={},tick=null,lastLeave=0;
 
@@ -98,7 +106,7 @@ call('layCauHinh').then(c=>{
   $('deW').classList.toggle('hide',!c.choChonMaDe);      // giáo viên tắt chọn mã đề: hệ thống tự phân
   $('nameW').classList.toggle('hide',!!c.dungDS);        // có danh sách dự thi: họ tên/lớp lấy từ danh sách
   $('pinW').classList.toggle('hide',!c.canPin);
-}).catch(()=>{$('info').textContent='Không tải được cấu hình. Hãy tải lại trang.'});
+}).catch(e=>{$('info').textContent='Không tải được cấu hình ('+(e&&e.message||'lỗi kết nối')+'). Hãy tải lại trang.'});
 
 $('go').onclick=()=>{
   const p={hoTen:$('hoTen').value,lop:$('lop').value,maHS:$('maHS').value,maDe:$('maDe').value,pin:$('pin').value};
